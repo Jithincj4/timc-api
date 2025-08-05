@@ -3,12 +3,12 @@ FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
 
 # Copy csproj and restore dependencies
-COPY ["timc-api.csproj", "."]
-RUN dotnet restore "./timc-api.csproj"
+COPY ["timc-api/timc-api.csproj", "timc-api/"]
+RUN dotnet restore "timc-api/timc-api.csproj"
 
 # Copy remaining files and build
 COPY . .
-WORKDIR "/src"
+WORKDIR "/src/timc-api"
 RUN dotnet build "timc-api.csproj" -c Release -o /app/build
 
 # Publish stage
