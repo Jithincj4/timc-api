@@ -1,12 +1,17 @@
+using FluentValidation.AspNetCore;
+using Microsoft.OpenApi.Models;
 using TimcApi.Application.Interfaces;
 using TimcApi.Application.Services;
+using TimcApi.Infrastructure.Common;
 using TimcApi.Infrastructure.Repositories;
 using TimcApi.Infrastructure.Services;
-using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
+builder.Services.AddSingleton<ISqlConnectionFactory, SqlConnectionFactory>();
+builder.Services.AddScoped<IPatientRepository, PatientRepository>();
+builder.Services.AddScoped<IPatientService, PatientService>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -52,10 +57,13 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // Register dependencies
-builder.Services.AddSingleton<IPatientRepository, InMemoryPatientRepository>();
-builder.Services.AddSingleton<IRefreshTokenRepository, InMemoryRefreshTokenRepository>();
-builder.Services.AddSingleton<IFileService, InMemoryFileService>();
 builder.Services.AddScoped<IPatientService, PatientService>();
+// Update the AutoMapper registration to use the correct overload
+builder.Services.AddAutoMapper(cfg => cfg.AddMaps(AppDomain.CurrentDomain.GetAssemblies()));
+builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddControllers()
+    .AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<Program>());
 
 var app = builder.Build();
 
