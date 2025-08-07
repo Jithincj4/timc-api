@@ -30,7 +30,7 @@ namespace TimcApi.Infrastructure.Repositories
 
         public async Task<int> CreateAsync(User user)
         {
-            user.PasswordHash = PasswordHasher.Hash(user.PasswordHash);
+            user.PasswordHash = PasswordHasher.Hash(user.Password);
             var conn = _connFactory.CreateConnection();
 
             var sql = @"
