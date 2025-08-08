@@ -7,42 +7,78 @@ namespace TimcApi.Application.Services
 {
     public class FacilitatorService : IFacilitatorService
     {
-        private readonly IFacilitatorRepository _repo;
+        private readonly IFacilitatorRepository _repository;
         private readonly IMapper _mapper;
 
-        public FacilitatorService(IFacilitatorRepository repo, IMapper mapper)
+        public FacilitatorService(IFacilitatorRepository repository, IMapper mapper)
         {
-            _repo = repo;
+            _repository = repository;
             _mapper = mapper;
         }
 
         public async Task<IEnumerable<FacilitatorDto>> GetAllAsync()
         {
-            var data = await _repo.GetAllAsync();
-            return _mapper.Map<IEnumerable<FacilitatorDto>>(data);
+            var facilitators = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<FacilitatorDto>>(facilitators);
         }
 
         public async Task<FacilitatorDto?> GetByIdAsync(int id)
         {
-            var data = await _repo.GetByIdAsync(id);
-            return _mapper.Map<FacilitatorDto>(data);
+            var facilitator = await _repository.GetByIdAsync(id);
+            return facilitator != null ? _mapper.Map<FacilitatorDto>(facilitator) : null;
         }
 
         public async Task<int> CreateAsync(CreateFacilitatorDto dto)
         {
+            // Validate input
+            if (dto == null)
+                throw new ArgumentNullException(nameof(dto));
+
+            // Map DTO to entity
             var facilitator = _mapper.Map<Facilitator>(dto);
-            return await _repo.CreateAsync(facilitator);
+
+            // Set creation timestamp
+            facilitator.CreatedAt = DateTime.UtcNow;
+
+            // Create in repository
+            int newId = await _repository.CreateAsync(facilitator);
+
+            return newId;
         }
 
         public async Task UpdateAsync(FacilitatorDto dto)
         {
-            var facilitator = _mapper.Map<Facilitator>(dto);
-            await _repo.UpdateAsync(facilitator);
+            // Validate input
+            if (dto == null)
+                throw new ArgumentNullException(nameof(dto));
+
+            // Get existing entity
+            var existingFacilitator = await _repository.GetByIdAsync(dto.FacilitatorId);
+            if (existingFacilitator == null)
+                throw new KeyNotFoundException($"Facilitator with ID {dto.FacilitatorId} not found");
+
+            // Preserve original creation timestamp
+            var originalCreatedAt = existingFacilitator.CreatedAt;
+
+            // Map DTO to existing entity
+            _mapper.Map(dto, existingFacilitator);
+
+            // Restore original creation timestamp
+            existingFacilitator.CreatedAt = originalCreatedAt;
+
+            // Update in repository
+            await _repository.UpdateAsync(existingFacilitator);
         }
 
         public async Task DeleteAsync(int id)
         {
-            await _repo.DeleteAsync(id);
+            // Validate existence
+            var existingFacilitator = await _repository.GetByIdAsync(id);
+            if (existingFacilitator == null)
+                throw new KeyNotFoundException($"Facilitator with ID {id} not found");
+
+            // Delete from repository
+            await _repository.DeleteAsync(id);
         }
     }
 

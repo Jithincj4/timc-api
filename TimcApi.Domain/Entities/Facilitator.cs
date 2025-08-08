@@ -37,12 +37,4 @@
         public List<Language> Languages { get; set; } = new();
         public List<Specialization> Specializations { get; set; } = new();
     }
-
-   
-
-  
-
-  
-
-   
 }

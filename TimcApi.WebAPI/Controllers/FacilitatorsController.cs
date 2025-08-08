@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TimcApi.Application.DTOs;
 using TimcApi.Application.Interfaces;
@@ -36,6 +35,7 @@ namespace TimcApi.WebAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateFacilitatorDto dto)
         {
+
             var id = await _service.CreateAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id }, new { id });
         }

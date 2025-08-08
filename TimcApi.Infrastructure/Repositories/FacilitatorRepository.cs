@@ -19,9 +19,68 @@ namespace TimcApi.Infrastructure.Repositories
         public async Task<IEnumerable<Facilitator>> GetAllAsync()
         {
             using var connection = _connection.CreateConnection();
-            const string sql = "SELECT * FROM Facilitators";
-            return await connection.QueryAsync<Facilitator>(sql);
+
+            // Step 1: Get facilitators with their user info
+            const string sql = @"
+        SELECT f.*, u.UserId, u.Username, u.Email, u.PasswordHash, u.RoleId, u.IsActive, u.CreatedAt
+        FROM Facilitators f
+        JOIN Users u ON f.UserId = u.UserId";
+
+            var facilitators = await connection.QueryAsync<Facilitator, User, Facilitator>(
+                sql,
+                (facilitator, user) =>
+                {
+                    facilitator.User = user;
+                    return facilitator;
+                },
+                splitOn: "UserId"
+            );
+
+            var facilitatorList = facilitators.ToList();
+            if (!facilitatorList.Any())
+                return facilitatorList;
+
+            // Step 2: Get all languages for all facilitators
+            const string languagesSql = @"
+        SELECT fl.FacilitatorId, l.*
+        FROM FacilitatorLanguages fl
+        JOIN LanguageMaster l ON fl.LanguageId = l.LanguageId";
+
+            var languagesLookup = (await connection.QueryAsync<int, Language, (int FacilitatorId, Language Lang)>(
+                languagesSql,
+                (facilitatorId, language) => (facilitatorId, language),
+                splitOn: "LanguageId"
+            ))
+            .GroupBy(x => x.FacilitatorId)
+            .ToDictionary(g => g.Key, g => g.Select(x => x.Lang).ToList());
+
+            // Step 3: Get all specializations for all facilitators
+            const string specializationsSql = @"
+        SELECT fs.FacilitatorId, s.*
+        FROM FacilitatorSpecializations fs
+        JOIN Specializations s ON fs.SpecializationId = s.SpecializationId";
+
+            var specializationsLookup = (await connection.QueryAsync<int, Specialization, (int FacilitatorId, Specialization Spec)>(
+                specializationsSql,
+                (facilitatorId, spec) => (facilitatorId, spec),
+                splitOn: "SpecializationId"
+            ))
+            .GroupBy(x => x.FacilitatorId)
+            .ToDictionary(g => g.Key, g => g.Select(x => x.Spec).ToList());
+
+            // Step 4: Assign related data
+            foreach (var facilitator in facilitatorList)
+            {
+                if (languagesLookup.TryGetValue(facilitator.FacilitatorId, out var langs))
+                    facilitator.Languages = langs;
+
+                if (specializationsLookup.TryGetValue(facilitator.FacilitatorId, out var specs))
+                    facilitator.Specializations = specs;
+            }
+
+            return facilitatorList;
         }
+
 
         public async Task<Facilitator?> GetByIdAsync(int id)
         {
