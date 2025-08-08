@@ -1,7 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
-
-namespace TimcApi.Domain.Entities
+﻿namespace TimcApi.Domain.Entities
 {
     public class Facilitator
     {
@@ -28,6 +25,7 @@ namespace TimcApi.Domain.Entities
         public DateTime? DateOfBirth { get; set; }
 
         public string? Gender { get; set; }
+        public bool IsRemoved { get; set; }
 
         public int? CreatedBy { get; set; }
 
@@ -40,37 +38,11 @@ namespace TimcApi.Domain.Entities
         public List<Specialization> Specializations { get; set; } = new();
     }
 
-    // Junction table classes
-    public class FacilitatorLanguage
-    {
-        public int FacilitatorId { get; set; }
-        public int LanguageId { get; set; }
+   
 
-        // Optional navigation properties
-        public Facilitator? Facilitator { get; set; }
-        public Language? Language { get; set; }
-    }
+  
 
-    public class FacilitatorSpecialization
-    {
-        public int FacilitatorId { get; set; }
-        public int SpecializationId { get; set; }
+  
 
-        // Optional navigation properties
-        public Facilitator? Facilitator { get; set; }
-        public Specialization? Specialization { get; set; }
-    }
-
-    public class Language
-    {
-        public int LanguageId { get; set; }
-        public string LanguageName { get; set; }
-    }
-
-    public class Specialization
-    {
-        public int SpecializationId { get; set; }
-        public string SpecializationName { get; set; }
-        public int CategoryId { get; set; }
-    }
+   
 }

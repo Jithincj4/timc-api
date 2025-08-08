@@ -1,4 +1,6 @@
 ﻿using Dapper;
+using Microsoft.Data.SqlClient;
+using System.Data;
 using TimcApi.Application.Interfaces;
 using TimcApi.Domain.Entities;
 using TimcApi.Infrastructure.Common;
@@ -7,57 +9,228 @@ namespace TimcApi.Infrastructure.Repositories
 {
     public class FacilitatorRepository : IFacilitatorRepository
     {
-        private readonly ISqlConnectionFactory _connFactory;
+        private readonly ISqlConnectionFactory _connection;
 
         public FacilitatorRepository(ISqlConnectionFactory connFactory)
         {
-            _connFactory = connFactory;
+            _connection = connFactory;
         }
 
         public async Task<IEnumerable<Facilitator>> GetAllAsync()
         {
-            var conn = _connFactory.CreateConnection();
-            return await conn.QueryAsync<Facilitator>("SELECT * FROM Facilitators");
+            using var connection = _connection.CreateConnection();
+            const string sql = "SELECT * FROM Facilitators";
+            return await connection.QueryAsync<Facilitator>(sql);
         }
 
         public async Task<Facilitator?> GetByIdAsync(int id)
         {
-            var conn = _connFactory.CreateConnection();
-            return await conn.QueryFirstOrDefaultAsync<Facilitator>(
-                "SELECT * FROM Facilitators WHERE FacilitatorId = @id", new { id });
+            using var connection = _connection.CreateConnection();
+
+            // Get facilitator with user info
+            const string facilitatorSql = @"
+            SELECT f.*, u.*
+            FROM Facilitators f
+            JOIN Users u ON f.UserId = u.UserId
+            WHERE f.FacilitatorId = @Id";
+
+            var facilitator = await connection.QueryAsync<Facilitator, User, Facilitator>(
+                facilitatorSql,
+                (facilitator, user) =>
+                {
+                    facilitator.User = user;
+                    return facilitator;
+                },
+                new { Id = id },
+                splitOn: "UserId"
+            ).ContinueWith(task => task.Result.FirstOrDefault());
+
+            if (facilitator == null) return null;
+
+            // Get languages
+            const string languagesSql = @"
+            SELECT l.*
+            FROM Languages l
+            JOIN FacilitatorLanguages fl ON l.LanguageId = fl.LanguageId
+            WHERE fl.FacilitatorId = @Id";
+
+            facilitator.Languages = (await connection.QueryAsync<Language>(languagesSql, new { Id = id })).ToList();
+
+            // Get specializations
+            const string specializationsSql = @"
+            SELECT s.*
+            FROM Specializations s
+            JOIN FacilitatorSpecializations fs ON s.SpecializationId = fs.SpecializationId
+            WHERE fs.FacilitatorId = @Id";
+
+            facilitator.Specializations = (await connection.QueryAsync<Specialization>(specializationsSql, new { Id = id })).ToList();
+
+            return facilitator;
         }
 
         public async Task<int> CreateAsync(Facilitator facilitator)
         {
-            var conn = _connFactory.CreateConnection();
-            var sql = @"
-            INSERT INTO Facilitators (FullName, Email, Phone, UserId, SACCOId)
-            VALUES (@FullName, @Email, @Phone, @UserId, @SACCOId);
-            SELECT CAST(SCOPE_IDENTITY() as int);";
+            using var connection = _connection.CreateConnection();
+            connection.Open();
+            using var transaction = connection.BeginTransaction();
 
-            return await conn.ExecuteScalarAsync<int>(sql, facilitator);
+            try
+            {
+                // Insert facilitator
+                const string facilitatorSql = @"
+            INSERT INTO Facilitators (
+                UserId, FirstName, LastName, Phone, Address, City, Country, 
+                IdType, IdNumber, DateOfBirth, Gender, CreatedBy, CreatedAt
+            )
+            VALUES (
+                @UserId, @FirstName, @LastName, @Phone, @Address, @City, @Country, 
+                @IdType, @IdNumber, @DateOfBirth, @Gender, @CreatedBy, @CreatedAt
+            );
+            SELECT CAST(SCOPE_IDENTITY() as int)";
+
+                facilitator.FacilitatorId = await connection.QuerySingleAsync<int>(
+                    facilitatorSql,
+                    facilitator,
+                    transaction
+                );
+
+                // Insert languages
+                if (facilitator.Languages?.Any() == true)
+                {
+                    const string languageSql = @"
+                INSERT INTO FacilitatorLanguages (FacilitatorId, LanguageId)
+                VALUES (@FacilitatorId, @LanguageId)";
+
+                    var languageParams = facilitator.Languages
+                        .Select(l => new {
+                            FacilitatorId = facilitator.FacilitatorId,
+                            LanguageId = l.LanguageId
+                        });
+
+                    await connection.ExecuteAsync(
+                        languageSql,
+                        languageParams,
+                        transaction
+                    );
+                }
+
+                // Insert specializations
+                if (facilitator.Specializations?.Any() == true)
+                {
+                    const string specializationSql = @"
+                INSERT INTO FacilitatorSpecializations (FacilitatorId, SpecializationId)
+                VALUES (@FacilitatorId, @SpecializationId)";
+
+                    var specializationParams = facilitator.Specializations
+                        .Select(s => new {
+                            FacilitatorId = facilitator.FacilitatorId,
+                            SpecializationId = s.SpecializationId
+                        });
+
+                    await connection.ExecuteAsync(
+                        specializationSql,
+                        specializationParams,
+                        transaction
+                    );
+                }
+
+                transaction.Commit();
+                return facilitator.FacilitatorId;
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
         }
 
         public async Task UpdateAsync(Facilitator facilitator)
         {
-            var conn = _connFactory.CreateConnection();
-            var sql = @"
-            UPDATE Facilitators SET
-                FullName = @FullName,
-                Email = @Email,
+            using var connection = _connection.CreateConnection();
+            connection.Open();
+            using var transaction = connection.BeginTransaction();
+
+            try
+            {
+                // Update facilitator basic details
+                const string updateFacilitatorSql = @"
+            UPDATE Facilitators
+            SET 
+                UserId = @UserId,
+                FirstName = @FirstName,
+                LastName = @LastName,
                 Phone = @Phone,
-                SACCOId = @SACCOId
+                Address = @Address,
+                City = @City,
+                Country = @Country,
+                IdType = @IdType,
+                IdNumber = @IdNumber,
+                DateOfBirth = @DateOfBirth,
+                Gender = @Gender,
+                CreatedBy = @CreatedBy
             WHERE FacilitatorId = @FacilitatorId";
 
-            await conn.ExecuteAsync(sql, facilitator);
+                await connection.ExecuteAsync(updateFacilitatorSql, facilitator, transaction);
+
+                // Delete existing specializations
+                const string deleteSpecializationsSql = @"
+            DELETE FROM FacilitatorSpecializations 
+            WHERE FacilitatorId = @FacilitatorId";
+
+                await connection.ExecuteAsync(deleteSpecializationsSql, new { facilitator.FacilitatorId }, transaction);
+
+                // Insert new specializations
+                if (facilitator.Specializations?.Any() == true)
+                {
+                    const string insertSpecializationsSql = @"
+                INSERT INTO FacilitatorSpecializations (FacilitatorId, SpecializationId)
+                VALUES (@FacilitatorId, @SpecializationId)";
+
+                    var specializationParams = facilitator.Specializations
+                        .Select(s => new {
+                            FacilitatorId = facilitator.FacilitatorId,
+                            SpecializationId = s.SpecializationId
+                        });
+
+                    await connection.ExecuteAsync(
+                        insertSpecializationsSql,
+                        specializationParams,
+                        transaction
+                    );
+                }
+
+                transaction.Commit();
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
         }
 
         public async Task DeleteAsync(int id)
         {
-            var conn = _connFactory.CreateConnection();
-            var sql = "DELETE FROM Facilitators WHERE FacilitatorId = @id";
-            await conn.ExecuteAsync(sql, new { id });
+            using var connection = _connection.CreateConnection();
+            connection.Open();
+            using var transaction = connection.BeginTransaction();
+
+            try
+            {
+                // Update facilitator basic details
+                const string updateFacilitatorSql = @"
+            UPDATE Facilitators
+            SET 
+                IsRemoved = 1,
+            WHERE FacilitatorId = @id";
+
+                await connection.ExecuteAsync(updateFacilitatorSql, id, transaction);
+                transaction.Commit();
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
         }
     }
-
 }
