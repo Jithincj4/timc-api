@@ -13,10 +13,12 @@ namespace TimcApi.WebAPI.Controllers
     public class SaccosController : ControllerBase
     {
         private readonly ISaccoService _service;
+        private readonly IUserService _userService;
 
-        public SaccosController(ISaccoService service)
+        public SaccosController(ISaccoService service,IUserService userService)
         {
             _service = service;
+            _userService = userService;
         }
 
         [HttpGet]
@@ -37,8 +39,23 @@ namespace TimcApi.WebAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateSaccoDto dto)
         {
-            // Get the current user ID from the token (if applicable)
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+
+            var usrDetails = new CreateUserDto()
+            {
+
+                Username = dto.Email,
+                Password = dto.Password,
+                Email=dto.Email,
+                RoleId = 2//TODO: Creature role enum
+            };
+
+            var saccoUserId = await _userService.CreateAsync(usrDetails);
+            dto.UserId = saccoUserId;
+
+            var email = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userService.GetByEmailAsync(email);
+            var userId = user?.UserId ?? 0;
+
             var id = await _service.CreateAsync(dto, userId);
             return CreatedAtAction(nameof(GetById), new { id }, new { id });
         }

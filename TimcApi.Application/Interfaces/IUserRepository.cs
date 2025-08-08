@@ -9,5 +9,6 @@ namespace TimcApi.Application.Interfaces
         Task<int> CreateAsync(User user);
         Task UpdateAsync(User user);
         Task DeleteAsync(int id);
+        Task<User?> GetByEmailAsync(string email);
     }
 }

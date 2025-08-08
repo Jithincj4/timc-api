@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TimcApi.Application.DTOs;
+﻿using TimcApi.Application.DTOs;
 
 namespace TimcApi.Application.Interfaces
 {
@@ -14,5 +9,6 @@ namespace TimcApi.Application.Interfaces
         Task<int> CreateAsync(CreateUserDto dto);
         Task UpdateAsync(UserDto dto);
         Task DeleteAsync(int id);
+        Task<UserDto?> GetByEmailAsync(string email);
     }
 }

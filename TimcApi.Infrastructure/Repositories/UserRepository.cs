@@ -27,6 +27,12 @@ namespace TimcApi.Infrastructure.Repositories
             return await conn.QueryFirstOrDefaultAsync<User>(
                 "SELECT * FROM Users WHERE UserId = @id", new { id });
         }
+        public async Task<User?> GetByEmailAsync(string email)
+        {
+            var conn = _connFactory.CreateConnection();
+            return await conn.QueryFirstOrDefaultAsync<User>(
+                "SELECT * FROM Users WHERE Email = @email", new { email });
+        }
 
         public async Task<int> CreateAsync(User user)
         {

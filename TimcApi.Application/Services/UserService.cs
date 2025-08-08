@@ -1,10 +1,4 @@
 ﻿using AutoMapper;
-using Microsoft.AspNetCore.Identity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TimcApi.Application.DTOs;
 using TimcApi.Application.Interfaces;
 using TimcApi.Domain.Entities;
@@ -52,6 +46,12 @@ namespace TimcApi.Application.Services
         public async Task DeleteAsync(int id)
         {
             await _repo.DeleteAsync(id);
+        }
+
+        public async Task<UserDto?> GetByEmailAsync(string email)
+        {
+            var user = await _repo.GetByEmailAsync(email);
+            return _mapper.Map<UserDto>(user);
         }
     }
 
