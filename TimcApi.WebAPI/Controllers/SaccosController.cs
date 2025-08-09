@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TimcApi.Application.DTOs;
 using TimcApi.Application.Interfaces;
-using TimcApi.Domain.Entities;
 
 namespace TimcApi.WebAPI.Controllers
 {
@@ -43,7 +42,7 @@ namespace TimcApi.WebAPI.Controllers
             var usrDetails = new CreateUserDto()
             {
 
-                Username = dto.Email,
+                Username = dto.UserName,
                 Password = dto.Password,
                 Email=dto.Email,
                 RoleId = 2//TODO: Creature role enum
@@ -61,9 +60,9 @@ namespace TimcApi.WebAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] SaccoDto dto)
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateSaccoDto dto)
         {
-            if (id != dto.SACCOId) return BadRequest("ID mismatch");
+            if (id != dto.AgentId) return BadRequest("ID mismatch");
             await _service.UpdateAsync(dto);
             return NoContent();
         }

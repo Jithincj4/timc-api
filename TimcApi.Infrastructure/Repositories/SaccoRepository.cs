@@ -17,23 +17,27 @@ namespace TimcApi.Infrastructure.Repositories
         public async Task<IEnumerable<SACCO>> GetAllAsync()
         {
             var conn = _connFactory.CreateConnection();
-            return await conn.QueryAsync<SACCO>("SELECT * FROM SACCOs");
+            return await conn.QueryAsync<SACCO>("SELECT * FROM Agents WHERE IsRemoved = 0");
         }
 
         public async Task<SACCO?> GetByIdAsync(int id)
         {
             var conn = _connFactory.CreateConnection();
             return await conn.QueryFirstOrDefaultAsync<SACCO>(
-                "SELECT * FROM SACCOs WHERE SACCOId = @id", new { id });
+                "SELECT * FROM Agents WHERE AgentId = @id AND IsRemoved = 0", new { id });
         }
 
         public async Task<int> CreateAsync(SACCO sacco)
         {
             var conn = _connFactory.CreateConnection();
             var sql = @"
-            INSERT INTO SACCOs (Name, Address, Phone, Email, CreatedBy, CreatedAt)
-            VALUES (@Name, @Address, @Phone, @Email, @CreatedBy, @CreatedAt);
-            SELECT CAST(SCOPE_IDENTITY() as int);";
+                INSERT INTO Agents
+                    (UserId, FirstName, LastName, Phone, Address, City, Country, IdType, IdNumber, DateOfBirth, Gender,
+                     CreatedBy, CreatedAt, AgentName, RegistrationNumber, Location, ContactPerson, IsRemoved)
+                VALUES
+                    (@UserId, @FirstName, @LastName, @Phone, @Address, @City, @Country, @IdType, @IdNumber, @DateOfBirth, @Gender,
+                     @CreatedBy, @CreatedAt, @AgentName, @RegistrationNumber, @Location, @ContactPerson, @IsRemoved);
+                SELECT CAST(SCOPE_IDENTITY() as int);";
 
             return await conn.ExecuteScalarAsync<int>(sql, sacco);
         }
@@ -42,21 +46,31 @@ namespace TimcApi.Infrastructure.Repositories
         {
             var conn = _connFactory.CreateConnection();
             var sql = @"
-            UPDATE SACCOs SET
-                Name = @Name,
-                Address = @Address,
-                Phone = @Phone,
-                Email = @Email
-            WHERE SACCOId = @SACCOId";
+                UPDATE Agents SET
+                    FirstName = @FirstName,
+                    LastName = @LastName,
+                    Phone = @Phone,
+                    Address = @Address,
+                    City = @City,
+                    Country = @Country,
+                    IdType = @IdType,
+                    IdNumber = @IdNumber,
+                    DateOfBirth = @DateOfBirth,
+                    Gender = @Gender,
+                    AgentName = @AgentName,
+                    RegistrationNumber = @RegistrationNumber,
+                    Location = @Location,
+                    ContactPerson = @ContactPerson
+                WHERE AgentId = @AgentId";
+
             await conn.ExecuteAsync(sql, sacco);
         }
 
         public async Task DeleteAsync(int id)
         {
             var conn = _connFactory.CreateConnection();
-            var sql = "DELETE FROM SACCOs WHERE SACCOId = @id";  // Or soft delete logic
+            var sql = "UPDATE Agents SET IsRemoved = 1 WHERE AgentId = @id"; // Soft delete
             await conn.ExecuteAsync(sql, new { id });
         }
     }
-
 }

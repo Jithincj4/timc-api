@@ -1,5 +1,4 @@
 ﻿using Dapper;
-using Microsoft.Data.SqlClient;
 using System.Data;
 using TimcApi.Application.Interfaces;
 using TimcApi.Domain.Entities;

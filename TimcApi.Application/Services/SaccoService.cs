@@ -21,16 +21,16 @@ namespace TimcApi.Application.Services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<SaccoDto>> GetAllAsync()
+        public async Task<IEnumerable<UpdateSaccoDto>> GetAllAsync()
         {
             var saccos = await _repo.GetAllAsync();
-            return _mapper.Map<IEnumerable<SaccoDto>>(saccos);
+            return _mapper.Map<IEnumerable<UpdateSaccoDto>>(saccos);
         }
 
-        public async Task<SaccoDto?> GetByIdAsync(int id)
+        public async Task<UpdateSaccoDto?> GetByIdAsync(int id)
         {
             var sacco = await _repo.GetByIdAsync(id);
-            return _mapper.Map<SaccoDto>(sacco);
+            return _mapper.Map<UpdateSaccoDto>(sacco);
         }
 
         public async Task<int> CreateAsync(CreateSaccoDto dto, int createdBy)
@@ -41,7 +41,7 @@ namespace TimcApi.Application.Services
             return await _repo.CreateAsync(entity);
         }
 
-        public async Task UpdateAsync(SaccoDto dto)
+        public async Task UpdateAsync(UpdateSaccoDto dto)
         {
             var entity = _mapper.Map<SACCO>(dto);
             await _repo.UpdateAsync(entity);
