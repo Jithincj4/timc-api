@@ -9,28 +9,28 @@ namespace TimcApi.Domain.Entities
         public int? UserId { get; set; }
 
         [MaxLength(100)]
-        public string? FirstName { get; set; }
+        public string? FirstName { get; set; } = "";
 
         [MaxLength(100)]
-        public string? LastName { get; set; }
+        public string? LastName { get; set; } = "";
 
         [MaxLength(50)]
-        public string? Phone { get; set; }
+        public string? Phone { get; set; } = "";
 
         [MaxLength(500)]
-        public string? Address { get; set; }
+        public string? Address { get; set; } = "";
 
         [MaxLength(100)]
-        public string? City { get; set; }
+        public string? City { get; set; } = "";
 
         [MaxLength(100)]
-        public string? Country { get; set; }
+        public string? Country { get; set; } = "";
 
         [MaxLength(50)]
-        public string? IdType { get; set; }
+        public string? IdType { get; set; } = "";
 
         [MaxLength(100)]
-        public string? IdNumber { get; set; }
+        public string? IdNumber { get; set; } = "";
 
         public DateTime? DateOfBirth { get; set; }
 
