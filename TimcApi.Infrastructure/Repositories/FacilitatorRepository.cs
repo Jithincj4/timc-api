@@ -3,6 +3,7 @@ using System.Data;
 using TimcApi.Application.Interfaces;
 using TimcApi.Domain.Entities;
 using TimcApi.Infrastructure.Common;
+using TimcApi.Infrastructure.Utility;
 
 namespace TimcApi.Infrastructure.Repositories
 {
@@ -126,7 +127,7 @@ namespace TimcApi.Infrastructure.Repositories
             return facilitator;
         }
 
-        public async Task<int> CreateAsync(Facilitator facilitator)
+        public async Task<int> CreateAsync(Facilitator facilitator, User user)
         {
             using var connection = _connection.CreateConnection();
             connection.Open();
@@ -134,15 +135,27 @@ namespace TimcApi.Infrastructure.Repositories
 
             try
             {
+                user.PasswordHash = PasswordHasher.Hash(user.Password);
+                var conn = _connection.CreateConnection();
+
+                var sql = @"
+                        INSERT INTO Users (Username, Email, PasswordHash, RoleId, IsActive, CreatedAt)
+                        VALUES (@Username, @Email, @PasswordHash, @RoleId, @IsActive, GetDate());
+                        SELECT CAST(SCOPE_IDENTITY() as int);
+                    ";
+
+                facilitator.UserId= await conn.ExecuteScalarAsync<int>(sql, user);
+
+
                 // Insert facilitator
                 const string facilitatorSql = @"
             INSERT INTO Facilitators (
                 UserId, FirstName, LastName, Phone, Address, City, Country, 
-                IdType, IdNumber, DateOfBirth, Gender, CreatedBy, CreatedAt
+                IdType, IdNumber, DateOfBirth, Gender, CreatedBy, CreatedAt,LicenseNumber,OrganisationName,YearsOfExperience
             )
             VALUES (
                 @UserId, @FirstName, @LastName, @Phone, @Address, @City, @Country, 
-                @IdType, @IdNumber, @DateOfBirth, @Gender, @CreatedBy, @CreatedAt
+                @IdType, @IdNumber, @DateOfBirth, @Gender, @CreatedBy, @CreatedAt,@LicenseNumber,@OrganisationName,@YearsOfExperience
             );
             SELECT CAST(SCOPE_IDENTITY() as int)";
 
@@ -160,7 +173,8 @@ namespace TimcApi.Infrastructure.Repositories
                 VALUES (@FacilitatorId, @LanguageId)";
 
                     var languageParams = facilitator.Languages
-                        .Select(l => new {
+                        .Select(l => new
+                        {
                             FacilitatorId = facilitator.FacilitatorId,
                             LanguageId = l.LanguageId
                         });
@@ -180,7 +194,8 @@ namespace TimcApi.Infrastructure.Repositories
                 VALUES (@FacilitatorId, @SpecializationId)";
 
                     var specializationParams = facilitator.Specializations
-                        .Select(s => new {
+                        .Select(s => new
+                        {
                             FacilitatorId = facilitator.FacilitatorId,
                             SpecializationId = s.SpecializationId
                         });
@@ -245,7 +260,8 @@ namespace TimcApi.Infrastructure.Repositories
                 VALUES (@FacilitatorId, @SpecializationId)";
 
                     var specializationParams = facilitator.Specializations
-                        .Select(s => new {
+                        .Select(s => new
+                        {
                             FacilitatorId = facilitator.FacilitatorId,
                             SpecializationId = s.SpecializationId
                         });

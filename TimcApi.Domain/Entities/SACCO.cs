@@ -43,6 +43,7 @@ namespace TimcApi.Domain.Entities
         // New columns added
         [MaxLength(200)]
         public string? AgentName { get; set; }
+        public int? AgentCategory { get; set; }
 
         [MaxLength(100)]
         public string? RegistrationNumber { get; set; }

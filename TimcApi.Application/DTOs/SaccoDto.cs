@@ -1,6 +1,6 @@
 ﻿namespace TimcApi.Application.DTOs
 {
-    /// <summary>
+  /// <summary>
     /// DTO used for returning SACCO (Agent) data to clients.
     /// </summary>
     public class SaccoDto
@@ -27,6 +27,7 @@
 
         // Newly added agent fields
         public string? AgentName { get; set; }
+        public int? AgentCategory { get; set; }
         public string? RegistrationNumber { get; set; }
         public string? Location { get; set; }
         public string? ContactPerson { get; set; }

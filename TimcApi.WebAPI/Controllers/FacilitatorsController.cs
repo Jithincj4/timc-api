@@ -33,7 +33,7 @@ namespace TimcApi.WebAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateFacilitatorDto dto)
+        public async Task<IActionResult> Create([FromBody] CreateUserAndFacilitator dto)
         {
 
             var id = await _service.CreateAsync(dto);

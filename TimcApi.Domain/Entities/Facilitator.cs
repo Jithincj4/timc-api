@@ -21,7 +21,10 @@
         public string? IdType { get; set; }
 
         public string? IdNumber { get; set; }
+        public string? LicenseNumber { get; set; }
+        public string? OrganisationName { get; set; }
 
+        public int? YearsOfExperience { get; set; }
         public DateTime? DateOfBirth { get; set; }
 
         public string? Gender { get; set; }

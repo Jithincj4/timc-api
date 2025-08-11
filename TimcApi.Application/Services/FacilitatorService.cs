@@ -28,20 +28,21 @@ namespace TimcApi.Application.Services
             return facilitator != null ? _mapper.Map<FacilitatorDto>(facilitator) : null;
         }
 
-        public async Task<int> CreateAsync(CreateFacilitatorDto dto)
+        public async Task<int> CreateAsync(CreateUserAndFacilitator dto)
         {
             // Validate input
             if (dto == null)
                 throw new ArgumentNullException(nameof(dto));
 
             // Map DTO to entity
-            var facilitator = _mapper.Map<Facilitator>(dto);
+            var facilitator = _mapper.Map<Facilitator>(dto.FacilitatorDto);
+            var user = _mapper.Map<User>(dto.UserDto);
 
             // Set creation timestamp
             facilitator.CreatedAt = DateTime.UtcNow;
 
             // Create in repository
-            int newId = await _repository.CreateAsync(facilitator);
+            int newId = await _repository.CreateAsync(facilitator,user);
 
             return newId;
         }

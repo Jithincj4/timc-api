@@ -29,18 +29,48 @@ namespace TimcApi.Infrastructure.Repositories
 
         public async Task<int> CreateAsync(SACCO sacco)
         {
-            var conn = _connFactory.CreateConnection();
-            var sql = @"
-                INSERT INTO Agents
-                    (UserId, FirstName, LastName, Phone, Address, City, Country, IdType, IdNumber, DateOfBirth, Gender,
-                     CreatedBy, CreatedAt, AgentName, RegistrationNumber, Location, ContactPerson, IsRemoved)
-                VALUES
-                    (@UserId, @FirstName, @LastName, @Phone, @Address, @City, @Country, @IdType, @IdNumber, @DateOfBirth, @Gender,
-                     @CreatedBy, @CreatedAt, @AgentName, @RegistrationNumber, @Location, @ContactPerson, @IsRemoved);
-                SELECT CAST(SCOPE_IDENTITY() as int);";
+            using var conn = _connFactory.CreateConnection();
+            conn.Open();
+            using var transaction = conn.BeginTransaction();
 
-            return await conn.ExecuteScalarAsync<int>(sql, sacco);
+            try
+            {
+                // 1. Insert into Agents
+                var agentSql = @"
+            INSERT INTO Agents
+                (UserId, FirstName, LastName, Phone, Address, City, Country, IdType, IdNumber, DateOfBirth, Gender,
+                 CreatedBy, CreatedAt, AgentName, RegistrationNumber, Location, ContactPerson, IsRemoved)
+            VALUES
+                (@UserId, @FirstName, @LastName, @Phone, @Address, @City, @Country, @IdType, @IdNumber, @DateOfBirth, @Gender,
+                 @CreatedBy, @CreatedAt, @AgentName, @RegistrationNumber, @Location, @ContactPerson, @IsRemoved);
+            SELECT CAST(SCOPE_IDENTITY() as int);";
+
+                var newAgentId = await conn.ExecuteScalarAsync<int>(agentSql, sacco, transaction);
+
+                // 2. Insert into AgentCategoryMapping
+                if (sacco.AgentCategory.HasValue)
+                {
+                    var mappingSql = @"
+                INSERT INTO AgentCategoryMapping (AgentId, CategoryId)
+                VALUES (@AgentId, @CategoryId);";
+
+                    await conn.ExecuteAsync(mappingSql, new
+                    {
+                        AgentId = newAgentId,
+                        CategoryId = sacco.AgentCategory.Value
+                    }, transaction);
+                }
+
+                transaction.Commit();
+                return newAgentId;
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
         }
+
 
         public async Task UpdateAsync(SACCO sacco)
         {
