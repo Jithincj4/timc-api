@@ -40,10 +40,9 @@ namespace TimcApi.WebAPI.Controllers
             return CreatedAtAction(nameof(GetById), new { id }, new { id });
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] FacilitatorDto dto)
+        [HttpPut]
+        public async Task<IActionResult> Update([FromBody] UpdateFacilitatorDto dto)
         {
-            if (id != dto.FacilitatorId) return BadRequest("ID mismatch");
             await _service.UpdateAsync(dto);
             return NoContent();
         }

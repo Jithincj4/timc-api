@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace TimcApi.Application.DTOs
 {
@@ -7,11 +9,13 @@ namespace TimcApi.Application.DTOs
         public int FacilitatorId { get; set; }
 
         public int UserId { get; set; }
+
         public string Username { get; set; }
         public string Email { get; set; }
 
         public string FirstName { get; set; }
         public string LastName { get; set; }
+
         public string? LicenseNumber { get; set; }
         public string? OrganisationName { get; set; }
 
@@ -22,8 +26,8 @@ namespace TimcApi.Application.DTOs
         public List<SpecializationDto> Specializations { get; set; } = new();
     }
 
-    public class CreateUserAndFacilitator {
-
+    public class CreateUserAndFacilitator
+    {
         public CreateFacilitatorDto? FacilitatorDto { get; set; }
         public CreateUserDto? UserDto { get; set; }
     }
@@ -32,39 +36,34 @@ namespace TimcApi.Application.DTOs
     {
         public int UserId { get; set; }
 
-        [Required]
-        [StringLength(100)]
+        [Required, StringLength(100)]
         public string FirstName { get; set; }
 
-        [Required]
-        [StringLength(100)]
+        [Required, StringLength(100)]
         public string LastName { get; set; }
 
         [StringLength(100)]
         public string? LicenseNumber { get; set; }
+
         public string? OrganisationName { get; set; }
-
         public int? CreatedBy { get; set; }
-
         public int? YearsOfExperience { get; set; }
 
         public List<int> LanguageIds { get; set; } = new();
         public List<int> SpecializationIds { get; set; } = new();
     }
+
     public class UpdateFacilitatorDto
     {
         public int FacilitatorId { get; set; }
 
-        [Required]
-        [StringLength(100)]
+        [Required, StringLength(100)]
         public string FirstName { get; set; }
 
-        [Required]
-        [StringLength(100)]
+        [Required, StringLength(100)]
         public string LastName { get; set; }
 
-        [Required]
-        [StringLength(50)]
+        [Required, StringLength(50)]
         public string Phone { get; set; }
 
         [StringLength(255)]
@@ -81,6 +80,7 @@ namespace TimcApi.Application.DTOs
 
         [StringLength(100)]
         public string? IdNumber { get; set; }
+
         [StringLength(100)]
         public string? LicenseNumber { get; set; }
 
@@ -94,7 +94,7 @@ namespace TimcApi.Application.DTOs
 
         public int? CreatedBy { get; set; }
         public int? YearsOfExperience { get; set; }
-        public List<int> LanguageIds { get; set; } = new();
+
         public List<int> SpecializationIds { get; set; } = new();
     }
 }

@@ -106,15 +106,6 @@ namespace TimcApi.Infrastructure.Repositories
 
             if (facilitator == null) return null;
 
-            // Get languages
-            const string languagesSql = @"
-            SELECT l.*
-            FROM Languages l
-            JOIN FacilitatorLanguages fl ON l.LanguageId = fl.LanguageId
-            WHERE fl.FacilitatorId = @Id";
-
-            facilitator.Languages = (await connection.QueryAsync<Language>(languagesSql, new { Id = id })).ToList();
-
             // Get specializations
             const string specializationsSql = @"
             SELECT s.*

@@ -38,7 +38,6 @@ namespace TimcApi.Application.Mapping
                 .ForMember(dest => dest.Specializations, opt => opt.Ignore())
                 .AfterMap((src, dest) =>
                 {
-                    dest.Languages = src.LanguageIds.Select(id => new Language { LanguageId = id }).ToList();
                     dest.Specializations = src.SpecializationIds.Select(id => new Specialization { SpecializationId = id }).ToList();
                 });
         }

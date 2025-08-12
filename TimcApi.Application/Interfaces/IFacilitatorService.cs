@@ -7,7 +7,7 @@ namespace TimcApi.Application.Interfaces
         Task<IEnumerable<FacilitatorDto>> GetAllAsync();
         Task<FacilitatorDto?> GetByIdAsync(int id);
         Task<int> CreateAsync(CreateUserAndFacilitator dto);
-        Task UpdateAsync(FacilitatorDto dto);
+        Task UpdateAsync(UpdateFacilitatorDto dto);
         Task DeleteAsync(int id);
     }
 }

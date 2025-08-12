@@ -47,7 +47,7 @@ namespace TimcApi.Application.Services
             return newId;
         }
 
-        public async Task UpdateAsync(FacilitatorDto dto)
+        public async Task UpdateAsync(UpdateFacilitatorDto dto)
         {
             // Validate input
             if (dto == null)
