@@ -18,7 +18,7 @@ namespace TimcApi.Application.DTOs
 
         public string? LicenseNumber { get; set; }
         public string? OrganisationName { get; set; }
-
+        public int? YearsOfExperience { get; set; }
         public int? CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
 
@@ -63,34 +63,10 @@ namespace TimcApi.Application.DTOs
         [Required, StringLength(100)]
         public string LastName { get; set; }
 
-        [Required, StringLength(50)]
-        public string Phone { get; set; }
-
-        [StringLength(255)]
-        public string? Address { get; set; }
-
-        [StringLength(100)]
-        public string? City { get; set; }
-
-        [StringLength(100)]
-        public string? Country { get; set; }
-
-        [StringLength(50)]
-        public string? IdType { get; set; }
-
-        [StringLength(100)]
-        public string? IdNumber { get; set; }
-
         [StringLength(100)]
         public string? LicenseNumber { get; set; }
 
         public string? OrganisationName { get; set; }
-
-        [DataType(DataType.Date)]
-        public DateTime? DateOfBirth { get; set; }
-
-        [StringLength(20)]
-        public string? Gender { get; set; }
 
         public int? CreatedBy { get; set; }
         public int? YearsOfExperience { get; set; }
