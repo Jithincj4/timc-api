@@ -43,5 +43,11 @@ namespace TimcApi.Application.Services
         {
             await _repo.DeleteAsync(id);
         }
+
+        public async Task<ServiceDto?> GetByIdAsync(int id)
+        {
+            var entity = await _repo.GetByIdAsync(id);
+            return entity == null ? null : _mapper.Map<ServiceDto>(entity);
+        }
     }
 }

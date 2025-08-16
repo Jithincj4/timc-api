@@ -10,6 +10,7 @@ namespace TimcApi.Application.Interfaces
     public interface IServiceService
     {
         Task<IEnumerable<ServiceDto>> GetAllAsync();
+        Task<ServiceDto?> GetByIdAsync(int id);
         Task<int> CreateAsync(CreateServiceDto dto);
         Task UpdateAsync(ServiceDto dto);
         Task DeleteAsync(int id);

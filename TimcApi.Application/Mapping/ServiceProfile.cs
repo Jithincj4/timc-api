@@ -8,11 +8,15 @@ namespace TimcApi.Application.Mapping
     {
         public ServiceProfile()
         {
-            CreateMap<Service, ServiceDto>().ReverseMap();
-            CreateMap<CreateServiceDto, Service>();
+            // Domain → DTO
+            CreateMap<Service, ServiceDto>()
+                .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category.Name));
 
-            CreateMap<PatientService, PatientServiceDto>().ReverseMap();
-            CreateMap<AssignServiceDto, PatientService>();
+            // DTO → Domain
+            CreateMap<CreateServiceDto, Service>();
+            CreateMap<UpdateServiceDto, Service>();
+
         }
     }
+
 }

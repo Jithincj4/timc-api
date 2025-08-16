@@ -8,7 +8,7 @@ namespace TimcApi.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin")]
+
     public class ServicesController : ControllerBase
     {
         private readonly IServiceService _service;
@@ -19,10 +19,14 @@ namespace TimcApi.WebAPI.Controllers
         }
 
         [HttpGet]
-        [AllowAnonymous]
         public async Task<IActionResult> GetAll()
         {
             return Ok(await _service.GetAllAsync());
+        }
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetAll(int id)
+        {
+            return Ok(await _service.GetByIdAsync(id));
         }
 
         [HttpPost]
@@ -35,7 +39,7 @@ namespace TimcApi.WebAPI.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] ServiceDto dto)
         {
-            if (id != dto.ServiceId) return BadRequest("ID mismatch");
+            if (id != dto.Id) return BadRequest("ID mismatch");
             await _service.UpdateAsync(dto);
             return NoContent();
         }
